@@ -123,7 +123,7 @@ class ZipService
         
         $sourceData = new SourceData($validatedData);
         
-        $response = $this->makeRequest('POST', '/sources', $sourceData->toArray());
+        $response = $this->makePublicKeyRequest('POST', '/sources', $sourceData->toArray());
         
         return $response;
     }
@@ -458,7 +458,7 @@ class ZipService
     }
 
     /**
-     * Make an HTTP request to the Zip API
+     * Make an HTTP request to the Zip API using the secret key
      *
      * @param string $method
      * @param string $endpoint
@@ -471,6 +471,30 @@ class ZipService
         $url = $this->apiServer . '/' . $this->version . $endpoint;
         
         $response = Http::withBasicAuth($this->secretKey, '')
+            ->withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])
+            ->{strtolower($method)}($url, $data);
+        
+        return $this->handleResponse($response);
+    }
+    
+    /**
+     * Make an HTTP request to the Zip API using the public key
+     * This is specifically used for creating sources
+     *
+     * @param string $method
+     * @param string $endpoint
+     * @param array $data
+     * @return array
+     * @throws Exception
+     */
+    public function makePublicKeyRequest(string $method, string $endpoint, array $data = []): array
+    {
+        $url = $this->apiServer . '/' . $this->version . $endpoint;
+        
+        $response = Http::withBasicAuth($this->publicKey, '')
             ->withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
