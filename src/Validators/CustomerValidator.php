@@ -18,9 +18,8 @@ class CustomerValidator
     {
         $validator = Validator::make($data, [
             'email' => 'required|email|max:255',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
+            'mobile_number' => 'nullable|string|min:5|max:25',
+            'description' => 'nullable|string|max:255',
             'metadata' => 'nullable|array',
         ]);
 

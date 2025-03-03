@@ -5,17 +5,15 @@ namespace Domdanao\ZipSdkLaravel\DTOs;
 class CustomerData
 {
     protected $email;
-    protected $firstName;
-    protected $lastName;
-    protected $phone;
+    protected $mobileNumber;
+    protected $description;
     protected $metadata;
 
     public function __construct(array $data)
     {
         $this->email = $data['email'];
-        $this->firstName = $data['first_name'];
-        $this->lastName = $data['last_name'];
-        $this->phone = $data['phone'] ?? null;
+        $this->mobileNumber = $data['mobile_number'] ?? null;
+        $this->description = $data['description'] ?? null;
         $this->metadata = $data['metadata'] ?? [];
     }
 
@@ -23,12 +21,14 @@ class CustomerData
     {
         $data = [
             'email' => $this->email,
-            'first_name' => $this->firstName,
-            'last_name' => $this->lastName,
         ];
 
-        if ($this->phone) {
-            $data['phone'] = $this->phone;
+        if ($this->mobileNumber) {
+            $data['mobile_number'] = $this->mobileNumber;
+        }
+
+        if ($this->description) {
+            $data['description'] = $this->description;
         }
 
         if (!empty($this->metadata)) {
