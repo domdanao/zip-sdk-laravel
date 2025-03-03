@@ -133,8 +133,8 @@ class ZipService
      *
      * @param string $type Payment source type (e.g., 'card')
      * @param array $cardDetails Card details including name, number, exp_month, exp_year, cvc, etc.
+     * @param array $redirectUrls Required redirect URLs for success, fail, and notify
      * @param array $ownerDetails Optional owner details including billing and shipping information
-     * @param array $redirectUrls Optional redirect URLs for success, fail, and notify
      * @param string|null $customerId Optional customer ID to attach the source to
      * @param array $metadata Optional metadata
      * @return array
@@ -143,22 +143,29 @@ class ZipService
     public function createCardSource(
         string $type,
         array $cardDetails,
+        array $redirectUrls,
         array $ownerDetails = [],
-        array $redirectUrls = [],
         ?string $customerId = null,
         array $metadata = []
     ): array {
+        // Validate that type is 'card'
+        if ($type !== 'card') {
+            throw new Exception('Type must be "card" when using createCardSource method');
+        }
+        
+        // Validate that redirectUrls contains required fields
+        if (!isset($redirectUrls['success']) || !isset($redirectUrls['fail'])) {
+            throw new Exception('Redirect URLs must include "success" and "fail" URLs');
+        }
+        
         $data = [
             'type' => $type,
-            'card' => $cardDetails
+            'card' => $cardDetails,
+            'redirect' => $redirectUrls
         ];
         
         if (!empty($ownerDetails)) {
             $data['owner'] = $ownerDetails;
-        }
-        
-        if (!empty($redirectUrls)) {
-            $data['redirect'] = $redirectUrls;
         }
         
         if ($customerId) {

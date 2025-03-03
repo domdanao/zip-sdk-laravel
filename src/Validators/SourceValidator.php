@@ -24,6 +24,19 @@ class SourceValidator
             'metadata' => 'nullable|array',
         ];
 
+        // Special validation for card type
+        if (isset($data['type']) && $data['type'] === 'card') {
+            // Card details are required for card type
+            if (!isset($data['card'])) {
+                throw new Exception('Source validation failed: Card details are required when type is card');
+            }
+            
+            // Redirect is required for card type
+            if (!isset($data['redirect'])) {
+                throw new Exception('Source validation failed: Redirect URLs are required when type is card');
+            }
+        }
+
         // Add card validation rules if card is present
         if (isset($data['card'])) {
             $rules['card'] = 'required|array';
