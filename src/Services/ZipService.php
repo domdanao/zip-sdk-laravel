@@ -127,6 +127,126 @@ class ZipService
         
         return $response;
     }
+    
+    /**
+     * Create a card payment source in Zip
+     *
+     * @param string $type Payment source type (e.g., 'card')
+     * @param array $cardDetails Card details including name, number, exp_month, exp_year, cvc, etc.
+     * @param array $ownerDetails Optional owner details including billing and shipping information
+     * @param array $redirectUrls Optional redirect URLs for success, fail, and notify
+     * @param string|null $customerId Optional customer ID to attach the source to
+     * @param array $metadata Optional metadata
+     * @return array
+     * @throws Exception
+     */
+    public function createCardSource(
+        string $type,
+        array $cardDetails,
+        array $ownerDetails = [],
+        array $redirectUrls = [],
+        ?string $customerId = null,
+        array $metadata = []
+    ): array {
+        $data = [
+            'type' => $type,
+            'card' => $cardDetails
+        ];
+        
+        if (!empty($ownerDetails)) {
+            $data['owner'] = $ownerDetails;
+        }
+        
+        if (!empty($redirectUrls)) {
+            $data['redirect'] = $redirectUrls;
+        }
+        
+        if ($customerId) {
+            $data['customer_id'] = $customerId;
+        }
+        
+        if (!empty($metadata)) {
+            $data['metadata'] = $metadata;
+        }
+        
+        return $this->createSource($data);
+    }
+    
+    /**
+     * Create a bank account payment source in Zip
+     *
+     * @param string $type Payment source type (e.g., 'bpi', 'unionbank', etc.)
+     * @param array $bankAccountDetails Bank account details
+     * @param array $ownerDetails Optional owner details including billing and shipping information
+     * @param array $redirectUrls Optional redirect URLs for success, fail, and notify
+     * @param string|null $customerId Optional customer ID to attach the source to
+     * @param array $metadata Optional metadata
+     * @return array
+     * @throws Exception
+     */
+    public function createBankAccountSource(
+        string $type,
+        array $bankAccountDetails,
+        array $ownerDetails = [],
+        array $redirectUrls = [],
+        ?string $customerId = null,
+        array $metadata = []
+    ): array {
+        $data = [
+            'type' => $type,
+            'bank_account' => $bankAccountDetails
+        ];
+        
+        if (!empty($ownerDetails)) {
+            $data['owner'] = $ownerDetails;
+        }
+        
+        if (!empty($redirectUrls)) {
+            $data['redirect'] = $redirectUrls;
+        }
+        
+        if ($customerId) {
+            $data['customer_id'] = $customerId;
+        }
+        
+        if (!empty($metadata)) {
+            $data['metadata'] = $metadata;
+        }
+        
+        return $this->createSource($data);
+    }
+    
+    /**
+     * Create a token-based payment source in Zip
+     *
+     * @param string $type Payment source type
+     * @param string $token Token representing the payment source
+     * @param string|null $customerId Optional customer ID to attach the source to
+     * @param array $metadata Optional metadata
+     * @return array
+     * @throws Exception
+     */
+    public function createTokenSource(
+        string $type,
+        string $token,
+        ?string $customerId = null,
+        array $metadata = []
+    ): array {
+        $data = [
+            'type' => $type,
+            'token' => $token
+        ];
+        
+        if ($customerId) {
+            $data['customer_id'] = $customerId;
+        }
+        
+        if (!empty($metadata)) {
+            $data['metadata'] = $metadata;
+        }
+        
+        return $this->createSource($data);
+    }
 
     /**
      * Retrieve a specific source from Zip
