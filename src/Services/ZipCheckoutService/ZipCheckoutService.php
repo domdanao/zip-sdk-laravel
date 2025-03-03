@@ -31,7 +31,7 @@ class ZipCheckoutService
         
         $sessionData = new CheckoutSessionData($validatedData);
         
-        $response = $this->zipService->makeRequest('POST', '/checkout/sessions', $sessionData->toArray());
+        $response = $this->zipService->makeRequest('POST', '/sessions', $sessionData->toArray());
         
         return new CheckoutSessionResponse($response);
     }
@@ -45,7 +45,7 @@ class ZipCheckoutService
      */
     public function getSession(string $sessionId): CheckoutSessionResponse
     {
-        $response = $this->zipService->makeRequest('GET', "/checkout/sessions/{$sessionId}");
+        $response = $this->zipService->makeRequest('GET', "/sessions/{$sessionId}");
         
         return new CheckoutSessionResponse($response);
     }
@@ -59,7 +59,7 @@ class ZipCheckoutService
      */
     public function cancelSession(string $sessionId): CheckoutSessionResponse
     {
-        $response = $this->zipService->makeRequest('POST', "/checkout/sessions/{$sessionId}/cancel");
+        $response = $this->zipService->makeRequest('POST', "/sessions/{$sessionId}/cancel");
         
         return new CheckoutSessionResponse($response);
     }
@@ -73,7 +73,7 @@ class ZipCheckoutService
      */
     public function expireSession(string $sessionId): CheckoutSessionResponse
     {
-        $response = $this->zipService->makeRequest('POST', "/checkout/sessions/{$sessionId}/expire");
+        $response = $this->zipService->makeRequest('POST', "/sessions/{$sessionId}/expire");
         
         return new CheckoutSessionResponse($response);
     }

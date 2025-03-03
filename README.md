@@ -21,7 +21,7 @@ php artisan vendor:publish --tag=zip-sdk-config
 This will create a `config/zip-sdk.php` file in your app. You should set your Zip API credentials in your `.env` file:
 
 ```
-ZIP_API_SERVER=https://api.zip.co
+ZIP_API_SERVER=https://api.zip.ph
 ZIP_PUBLIC_KEY=your_public_key
 ZIP_SECRET_KEY=your_secret_key
 ZIP_API_VERSION=v2

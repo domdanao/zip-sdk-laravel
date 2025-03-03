@@ -10,7 +10,7 @@ return [
     |
     */
 
-    'api_server' => env('ZIP_API_SERVER', 'https://api.zip.co'),
+    'api_server' => env('ZIP_API_SERVER', 'https://api.zip.ph'),
     'public_key' => env('ZIP_PUBLIC_KEY'),
     'secret_key' => env('ZIP_SECRET_KEY'),
     'version' => env('ZIP_API_VERSION', 'v2'),
