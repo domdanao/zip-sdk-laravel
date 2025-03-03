@@ -53,6 +53,34 @@ class ZipService
     }
 
     /**
+     * Retrieve a specific customer from Zip
+     *
+     * @param string $customerId
+     * @return array
+     * @throws Exception
+     */
+    public function getCustomer(string $customerId): array
+    {
+        $response = $this->makeRequest('GET', "/customers/{$customerId}");
+        
+        return $response;
+    }
+
+    /**
+     * List all customers from Zip
+     *
+     * @param array $params Optional query parameters
+     * @return array
+     * @throws Exception
+     */
+    public function listCustomers(array $params = []): array
+    {
+        $response = $this->makeRequest('GET', '/customers', $params);
+        
+        return $response;
+    }
+
+    /**
      * Create a payment source in Zip
      *
      * @param array $data
