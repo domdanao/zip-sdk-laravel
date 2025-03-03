@@ -25,7 +25,7 @@ class TestCase extends Orchestra
         ]);
 
         // Set up Zip config for testing
-        $app['config']->set('zip-sdk.api_server', 'https://api.sandbox.zip.co');
+        $app['config']->set('zip-sdk.api_server', 'https://api.zip.ph');
         $app['config']->set('zip-sdk.public_key', 'test_public_key');
         $app['config']->set('zip-sdk.secret_key', 'test_secret_key');
     }

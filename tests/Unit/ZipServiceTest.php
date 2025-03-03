@@ -19,7 +19,7 @@ class ZipServiceTest extends TestCase
     public function testCreateCustomer()
     {
         Http::fake([
-            'api.sandbox.zip.co/v2/customers' => Http::response([
+            'https://api.zip.ph/v2/customers' => Http::response([
                 'id' => 'cus_123456',
                 'email' => 'test@example.com',
                 'first_name' => 'John',
@@ -44,7 +44,7 @@ class ZipServiceTest extends TestCase
     public function testCreateSource()
     {
         Http::fake([
-            'api.sandbox.zip.co/v2/sources' => Http::response([
+            'https://api.zip.ph/v2/sources' => Http::response([
                 'id' => 'src_123456',
                 'type' => 'card',
                 'customer_id' => 'cus_123456',
@@ -64,10 +64,63 @@ class ZipServiceTest extends TestCase
         $this->assertEquals('cus_123456', $response['customer_id']);
     }
 
+    public function testGetSource()
+    {
+        Http::fake([
+            'https://api.zip.ph/v2/sources/src_123456' => Http::response([
+                'id' => 'src_123456',
+                'type' => 'card',
+                'customer_id' => 'cus_123456',
+                'vaulted' => true,
+                'used' => false,
+            ], 200),
+        ]);
+
+        $response = $this->zipService->getSource('src_123456');
+
+        $this->assertEquals('src_123456', $response['id']);
+        $this->assertEquals('card', $response['type']);
+        $this->assertEquals('cus_123456', $response['customer_id']);
+        $this->assertTrue($response['vaulted']);
+        $this->assertFalse($response['used']);
+    }
+
+    public function testAttachSource()
+    {
+        Http::fake([
+            'https://api.zip.ph/v2/customers/cus_123456/sources' => Http::response([
+                'id' => 'src_789012',
+                'type' => 'card',
+                'customer_id' => 'cus_123456',
+            ], 200),
+        ]);
+
+        $response = $this->zipService->attachSource('cus_123456', 'src_789012');
+
+        $this->assertEquals('src_789012', $response['id']);
+        $this->assertEquals('card', $response['type']);
+        $this->assertEquals('cus_123456', $response['customer_id']);
+    }
+
+    public function testDetachSource()
+    {
+        Http::fake([
+            'https://api.zip.ph/v2/customers/cus_123456/sources/src_789012' => Http::response([
+                'id' => 'src_789012',
+                'deleted' => true,
+            ], 200),
+        ]);
+
+        $response = $this->zipService->detachSource('cus_123456', 'src_789012');
+
+        $this->assertEquals('src_789012', $response['id']);
+        $this->assertTrue($response['deleted']);
+    }
+
     public function testCreateCharge()
     {
         Http::fake([
-            'api.sandbox.zip.co/v2/charges' => Http::response([
+            'https://api.zip.ph/v2/charges' => Http::response([
                 'id' => 'ch_123456',
                 'amount' => 10000,
                 'currency' => 'PHP',

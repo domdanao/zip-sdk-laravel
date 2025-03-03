@@ -21,7 +21,4 @@ return [
         'payment_methods' => ['card', 'gcash', 'maya'],
         'locale' => 'en',
     ],
-
-    // Convenience fee settings
-    'convenience_fee' => env('ZIP_CONVENIENCE_FEE', 1500),
 ];

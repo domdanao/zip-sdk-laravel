@@ -77,4 +77,42 @@ class ZipCheckoutService
         
         return new CheckoutSessionResponse($response);
     }
+
+    /**
+     * List all checkout sessions
+     *
+     * @param array $params Optional query parameters (limit, starting_after, ending_before)
+     * @return array
+     * @throws Exception
+     */
+    public function listSessions(array $params = []): array
+    {
+        $response = $this->zipService->makeRequest('GET', '/sessions', $params);
+        
+        $sessions = [];
+        foreach ($response['data'] ?? [] as $sessionData) {
+            $sessions[] = new CheckoutSessionResponse($sessionData);
+        }
+        
+        return [
+            'data' => $sessions,
+            'has_more' => $response['has_more'] ?? false,
+            'total_count' => $response['total_count'] ?? count($sessions),
+        ];
+    }
+
+    /**
+     * Capture a checkout session
+     *
+     * @param string $sessionId
+     * @param array $data Optional data for capture (amount)
+     * @return CheckoutSessionResponse
+     * @throws Exception
+     */
+    public function captureSession(string $sessionId, array $data = []): CheckoutSessionResponse
+    {
+        $response = $this->zipService->makeRequest('POST', "/sessions/{$sessionId}/capture", $data);
+        
+        return new CheckoutSessionResponse($response);
+    }
 }

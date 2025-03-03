@@ -5,6 +5,8 @@ namespace Domdanao\ZipSdkLaravel;
 use Illuminate\Support\ServiceProvider;
 use Domdanao\ZipSdkLaravel\Services\ZipService;
 use Domdanao\ZipSdkLaravel\Services\ZipCheckoutService\ZipCheckoutService;
+use Domdanao\ZipSdkLaravel\Services\PaymentRequestService\PaymentRequestService;
+use Domdanao\ZipSdkLaravel\Services\PaymentLinkService\PaymentLinkService;
 
 class ZipSdkServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,20 @@ class ZipSdkServiceProvider extends ServiceProvider
         // Register ZipCheckoutService
         $this->app->singleton('zip-checkout-service', function ($app) {
             return new ZipCheckoutService(
+                $app->make('zip-service')
+            );
+        });
+
+        // Register PaymentRequestService
+        $this->app->singleton('zip-payment-request-service', function ($app) {
+            return new PaymentRequestService(
+                $app->make('zip-service')
+            );
+        });
+
+        // Register PaymentLinkService
+        $this->app->singleton('zip-payment-link-service', function ($app) {
+            return new PaymentLinkService(
                 $app->make('zip-service')
             );
         });

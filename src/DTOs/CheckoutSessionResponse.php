@@ -21,6 +21,7 @@ class CheckoutSessionResponse
     public $locale;
     public $createdAt;
     public $expiresAt;
+    public $amountCaptured;
 
     public function __construct(array $data)
     {
@@ -41,6 +42,7 @@ class CheckoutSessionResponse
         $this->locale = $data['locale'] ?? null;
         $this->createdAt = $data['created_at'] ?? null;
         $this->expiresAt = $data['expires_at'] ?? null;
+        $this->amountCaptured = $data['amount_captured'] ?? null;
     }
 
     public function toArray(): array
@@ -63,6 +65,7 @@ class CheckoutSessionResponse
             'locale' => $this->locale,
             'created_at' => $this->createdAt,
             'expires_at' => $this->expiresAt,
+            'amount_captured' => $this->amountCaptured,
         ];
     }
 }

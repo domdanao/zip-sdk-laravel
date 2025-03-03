@@ -17,7 +17,7 @@ class SourceValidator
     public function validate(array $data): array
     {
         $validator = Validator::make($data, [
-            'type' => 'required|string|in:card,gcash,maya',
+            'type' => 'required|string|in:card,gcash,paymaya,wechat,alipay,unionpay,grabpay,instapay,qrph,bpi,unionbank,metrobank,bdo,pnb,rcbc',
             'customer_id' => 'required|string',
             'token' => 'required|string',
             'metadata' => 'nullable|array',
