@@ -93,6 +93,21 @@ class ZipService
         
         return $response;
     }
+    
+    /**
+     * Update a customer in Zip
+     *
+     * @param string $customerId
+     * @param array $data
+     * @return array
+     * @throws Exception
+     */
+    public function updateCustomer(string $customerId, array $data): array
+    {
+        $response = $this->makeRequest('PUT', "/customers/{$customerId}", $data);
+        
+        return $response;
+    }
 
     /**
      * Create a payment source in Zip
