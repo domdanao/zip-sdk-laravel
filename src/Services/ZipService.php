@@ -79,6 +79,20 @@ class ZipService
         
         return $response;
     }
+    
+    /**
+     * Retrieve a customer by email from Zip
+     *
+     * @param string $email
+     * @return array
+     * @throws Exception
+     */
+    public function getCustomerByEmail(string $email): array
+    {
+        $response = $this->makeRequest('GET', "/customers/by_email/{$email}");
+        
+        return $response;
+    }
 
     /**
      * Create a payment source in Zip
