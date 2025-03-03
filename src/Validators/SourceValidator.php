@@ -107,9 +107,19 @@ class SourceValidator
             $rules['redirect.notify'] = 'nullable|url';
         }
 
-        // Ensure at least one of token, card, or bank_account is provided
-        if (!isset($data['token']) && !isset($data['card']) && !isset($data['bank_account'])) {
-            throw new Exception('Source validation failed: At least one of token, card, or bank_account must be provided');
+        // Define payment types that only require redirect
+        $redirectOnlyTypes = ['gcash', 'paymaya', 'wechat', 'alipay', 'unionpay', 'grabpay', 'instapay', 'qrph', 'bpi', 'unionbank', 'metrobank', 'bdo', 'pnb', 'rcbc'];
+        
+        if (isset($data['type']) && in_array($data['type'], $redirectOnlyTypes)) {
+            // For these types, only redirect is required
+            if (!isset($data['redirect'])) {
+                throw new Exception('Source validation failed: Redirect URLs are required for ' . $data['type'] . ' payment type');
+            }
+        } else {
+            // For other types, ensure at least one of token, card, or bank_account is provided
+            if (!isset($data['token']) && !isset($data['card']) && !isset($data['bank_account'])) {
+                throw new Exception('Source validation failed: At least one of token, card, or bank_account must be provided');
+            }
         }
 
         $validator = Validator::make($data, $rules);

@@ -254,6 +254,55 @@ class ZipService
         
         return $this->createSource($data);
     }
+    
+    /**
+     * Create a redirect-only payment source in Zip (for types like gcash, paymaya, etc.)
+     *
+     * @param string $type Payment source type (e.g., 'gcash', 'paymaya', 'wechat', etc.)
+     * @param array $redirectUrls Required redirect URLs for success, fail, and notify
+     * @param array $ownerDetails Optional owner details including billing and shipping information
+     * @param string|null $customerId Optional customer ID to attach the source to
+     * @param array $metadata Optional metadata
+     * @return array
+     * @throws Exception
+     */
+    public function createRedirectSource(
+        string $type,
+        array $redirectUrls,
+        array $ownerDetails = [],
+        ?string $customerId = null,
+        array $metadata = []
+    ): array {
+        // Validate that redirectUrls contains required fields
+        if (!isset($redirectUrls['success']) || !isset($redirectUrls['fail'])) {
+            throw new Exception('Redirect URLs must include "success" and "fail" URLs');
+        }
+        
+        // Validate that type is one of the redirect-only types
+        $redirectOnlyTypes = ['gcash', 'paymaya', 'wechat', 'alipay', 'unionpay', 'grabpay', 'instapay', 'qrph', 'bpi', 'unionbank', 'metrobank', 'bdo', 'pnb', 'rcbc'];
+        if (!in_array($type, $redirectOnlyTypes)) {
+            throw new Exception('Type must be one of the redirect-only payment types when using createRedirectSource method');
+        }
+        
+        $data = [
+            'type' => $type,
+            'redirect' => $redirectUrls
+        ];
+        
+        if (!empty($ownerDetails)) {
+            $data['owner'] = $ownerDetails;
+        }
+        
+        if ($customerId) {
+            $data['customer_id'] = $customerId;
+        }
+        
+        if (!empty($metadata)) {
+            $data['metadata'] = $metadata;
+        }
+        
+        return $this->createSource($data);
+    }
 
     /**
      * Retrieve a specific source from Zip
