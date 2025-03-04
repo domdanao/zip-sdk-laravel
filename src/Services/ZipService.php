@@ -113,17 +113,40 @@ class ZipService
      * Create a payment source in Zip
      *
      * @param array $data
+     * @param bool $usePublicKey Whether to use the public key for authentication (default: true)
      * @return array
      * @throws Exception
      */
-    public function createSource(array $data): array
+    public function createSource(array $data, bool $usePublicKey = true): array
     {
+        // Log the input parameters for debugging
+        \Illuminate\Support\Facades\Log::info('ZipService::createSource called', [
+            'data' => $data,
+            'usePublicKey' => $usePublicKey,
+            'publicKey' => $this->publicKey,
+            'secretKey' => substr($this->secretKey, 0, 5) . '...',
+        ]);
+        
         $validator = new SourceValidator();
         $validatedData = $validator->validate($data);
         
         $sourceData = new SourceData($validatedData);
         
-        $response = $this->makePublicKeyRequest('POST', '/sources', $sourceData->toArray());
+        \Illuminate\Support\Facades\Log::info('ZipService::createSource validated data', [
+            'sourceData' => $sourceData->toArray(),
+        ]);
+        
+        if ($usePublicKey) {
+            \Illuminate\Support\Facades\Log::info('ZipService::createSource using public key');
+            $response = $this->makePublicKeyRequest('POST', '/sources', $sourceData->toArray());
+        } else {
+            \Illuminate\Support\Facades\Log::info('ZipService::createSource using secret key');
+            $response = $this->makeRequest('POST', '/sources', $sourceData->toArray());
+        }
+        
+        \Illuminate\Support\Facades\Log::info('ZipService::createSource response', [
+            'response' => $response,
+        ]);
         
         return $response;
     }
@@ -176,7 +199,7 @@ class ZipService
             $data['metadata'] = $metadata;
         }
         
-        return $this->createSource($data);
+        return $this->createSource($data, true); // Always use public key for redirect sources
     }
     
     /**
@@ -220,7 +243,7 @@ class ZipService
             $data['metadata'] = $metadata;
         }
         
-        return $this->createSource($data);
+        return $this->createSource($data, true); // Always use public key for bank account sources
     }
     
     /**
@@ -252,7 +275,7 @@ class ZipService
             $data['metadata'] = $metadata;
         }
         
-        return $this->createSource($data);
+        return $this->createSource($data, true); // Always use public key for redirect sources
     }
     
     /**
@@ -279,7 +302,7 @@ class ZipService
         }
         
         // Validate that type is one of the redirect-only types
-        $redirectOnlyTypes = ['gcash', 'paymaya', 'wechat', 'alipay', 'unionpay', 'grabpay', 'instapay', 'qrph', 'bpi', 'unionbank', 'metrobank', 'bdo', 'pnb', 'rcbc'];
+        $redirectOnlyTypes = ['gcash', 'paymaya', 'wechat', 'alipay', 'unionpay', 'grabpay', 'instapay', 'qrph', 'bpi'];
         if (!in_array($type, $redirectOnlyTypes)) {
             throw new Exception('Type must be one of the redirect-only payment types when using createRedirectSource method');
         }
@@ -301,7 +324,7 @@ class ZipService
             $data['metadata'] = $metadata;
         }
         
-        return $this->createSource($data);
+        return $this->createSource($data, true); // Always use public key for redirect sources
     }
 
     /**
@@ -470,12 +493,25 @@ class ZipService
     {
         $url = $this->apiServer . '/' . $this->version . $endpoint;
         
+        \Illuminate\Support\Facades\Log::info('ZipService::makeRequest', [
+            'method' => $method,
+            'url' => $url,
+            'data' => $data,
+            'auth' => 'secret_key',
+        ]);
+        
         $response = Http::withBasicAuth($this->secretKey, '')
             ->withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
             ])
             ->{strtolower($method)}($url, $data);
+        
+        \Illuminate\Support\Facades\Log::info('ZipService::makeRequest response', [
+            'status' => $response->status(),
+            'successful' => $response->successful(),
+            'body' => $response->body(),
+        ]);
         
         return $this->handleResponse($response);
     }
@@ -494,12 +530,26 @@ class ZipService
     {
         $url = $this->apiServer . '/' . $this->version . $endpoint;
         
+        \Illuminate\Support\Facades\Log::info('ZipService::makePublicKeyRequest', [
+            'method' => $method,
+            'url' => $url,
+            'data' => $data,
+            'auth' => 'public_key',
+            'publicKey' => $this->publicKey,
+        ]);
+        
         $response = Http::withBasicAuth($this->publicKey, '')
             ->withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
             ])
             ->{strtolower($method)}($url, $data);
+        
+        \Illuminate\Support\Facades\Log::info('ZipService::makePublicKeyRequest response', [
+            'status' => $response->status(),
+            'successful' => $response->successful(),
+            'body' => $response->body(),
+        ]);
         
         return $this->handleResponse($response);
     }
@@ -517,8 +567,32 @@ class ZipService
             return $response->json();
         }
         
+        // Log the full response for debugging
+        \Illuminate\Support\Facades\Log::error('ZipService::handleResponse error', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+            'json' => $response->json(),
+            'headers' => $response->headers(),
+        ]);
+        
         $errorMessage = $response->json('message') ?? 'Unknown error';
         $errorCode = $response->json('code') ?? $response->status();
+        
+        // Try to extract more detailed error information
+        $errorDetails = '';
+        if ($response->json('error')) {
+            if (is_string($response->json('error'))) {
+                $errorMessage = $response->json('error');
+            } elseif (is_array($response->json('error'))) {
+                $errorDetails = json_encode($response->json('error'), JSON_PRETTY_PRINT);
+                $errorMessage = $errorDetails;
+            }
+        }
+        
+        // Check for 'detail' field which is used in some API error responses
+        if ($response->json('detail')) {
+            $errorMessage = $response->json('detail');
+        }
         
         throw new Exception("Zip API Error ({$errorCode}): {$errorMessage}");
     }
