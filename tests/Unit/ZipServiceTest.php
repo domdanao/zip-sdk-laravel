@@ -68,21 +68,81 @@ class ZipServiceTest extends TestCase
     {
         Http::fake([
             'https://api.zip.ph/v2/sources/src_123456' => Http::response([
+                'object' => 'source',
                 'id' => 'src_123456',
                 'type' => 'card',
-                'customer_id' => 'cus_123456',
+                'card' => [
+                    'last4' => '4242',
+                    'brand' => 'visa',
+                ],
+                'owner' => [
+                    'billing' => [
+                        'name' => 'John Doe',
+                        'email' => 'john@example.com',
+                    ],
+                ],
                 'vaulted' => true,
                 'used' => false,
+                'created_at' => '2023-01-01T00:00:00Z',
+                'updated_at' => '2023-01-01T00:00:00Z',
+                'metadata' => [
+                    'order_id' => '12345',
+                ],
             ], 200),
         ]);
 
-        $response = $this->zipService->getSource('src_123456');
+        $source = $this->zipService->getSource('src_123456');
 
-        $this->assertEquals('src_123456', $response['id']);
-        $this->assertEquals('card', $response['type']);
-        $this->assertEquals('cus_123456', $response['customer_id']);
-        $this->assertTrue($response['vaulted']);
-        $this->assertFalse($response['used']);
+        // Test that we get a SourceResponseData object
+        $this->assertInstanceOf(\Domdanao\ZipSdkLaravel\DTOs\SourceResponseData::class, $source);
+        
+        // Test the getters
+        $this->assertEquals('source', $source->getObject());
+        $this->assertEquals('src_123456', $source->getId());
+        $this->assertEquals('card', $source->getType());
+        $this->assertEquals(['last4' => '4242', 'brand' => 'visa'], $source->getCard());
+        $this->assertEquals(['billing' => ['name' => 'John Doe', 'email' => 'john@example.com']], $source->getOwner());
+        $this->assertTrue($source->isVaulted());
+        $this->assertFalse($source->isUsed());
+        $this->assertEquals('2023-01-01T00:00:00Z', $source->getCreatedAt());
+        $this->assertEquals('2023-01-01T00:00:00Z', $source->getUpdatedAt());
+        $this->assertEquals(['order_id' => '12345'], $source->getMetadata());
+        
+        // Test the toArray method
+        $sourceArray = $source->toArray();
+        $this->assertEquals('source', $sourceArray['object']);
+        $this->assertEquals('src_123456', $sourceArray['id']);
+        $this->assertEquals('card', $sourceArray['type']);
+        $this->assertEquals(['last4' => '4242', 'brand' => 'visa'], $sourceArray['card']);
+        $this->assertEquals(['billing' => ['name' => 'John Doe', 'email' => 'john@example.com']], $sourceArray['owner']);
+        $this->assertTrue($sourceArray['vaulted']);
+        $this->assertFalse($sourceArray['used']);
+        $this->assertEquals('2023-01-01T00:00:00Z', $sourceArray['created_at']);
+        $this->assertEquals('2023-01-01T00:00:00Z', $sourceArray['updated_at']);
+        $this->assertEquals(['order_id' => '12345'], $sourceArray['metadata']);
+    }
+    
+    public function testGetSourceWithInvalidId()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid source ID format');
+        
+        $this->zipService->getSource('invalid_id');
+    }
+    
+    public function testGetSourceNotFound()
+    {
+        Http::fake([
+            'https://api.zip.ph/v2/sources/src_notfound' => Http::response([
+                'error' => 'Source not found',
+                'code' => 'resource_not_found',
+            ], 404),
+        ]);
+        
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Source with ID src_notfound not found');
+        
+        $this->zipService->getSource('src_notfound');
     }
 
     public function testAttachSource()

@@ -330,15 +330,47 @@ class ZipService
     /**
      * Retrieve a specific source from Zip
      *
-     * @param string $sourceId
-     * @return array
-     * @throws Exception
+     * This method retrieves an existing source object from the Zip API using the source ID.
+     * The response includes details about the source such as its type, status, and payment details.
+     *
+     * The returned SourceResponseData object contains the following properties:
+     * - object: String representing the object's type
+     * - id: A unique ID for this source (starts with 'src_')
+     * - type: The source type (card, gcash, paymaya, wechat, alipay, unionpay, grabpay, instapay, qrph, bpi, etc.)
+     * - card: Card details (if type is 'card')
+     * - bank_account: Bank account details (if applicable)
+     * - redirect: Redirect URLs (if applicable)
+     * - owner: Owner details (if provided)
+     * - vaulted: Whether this source has been securely saved for later reuse
+     * - used: Whether this source has already been used
+     * - created_at: Time at which the object was created (ISO 8601 format)
+     * - updated_at: Time at which the object was updated (ISO 8601 format)
+     * - metadata: Additional metadata (if any)
+     *
+     * @param string $sourceId The unique identifier of the source to retrieve (starts with 'src_')
+     * @return \Domdanao\ZipSdkLaravel\DTOs\SourceResponseData
+     * @throws Exception If the source doesn't exist or there's an error with the API request
      */
-    public function getSource(string $sourceId): array
+    public function getSource(string $sourceId): \Domdanao\ZipSdkLaravel\DTOs\SourceResponseData
     {
-        $response = $this->makeRequest('GET', "/sources/{$sourceId}");
-        
-        return $response;
+        try {
+            // Validate the source ID format
+            if (!preg_match('/^src_[a-zA-Z0-9]+$/', $sourceId)) {
+                throw new Exception('Invalid source ID format. Source ID should start with "src_" followed by alphanumeric characters.');
+            }
+            
+            $response = $this->makeRequest('GET', "/sources/{$sourceId}");
+            
+            return new \Domdanao\ZipSdkLaravel\DTOs\SourceResponseData($response);
+        } catch (Exception $e) {
+            // Check if this is a 404 error (source not found)
+            if (strpos($e->getMessage(), '404') !== false) {
+                throw new Exception("Source with ID {$sourceId} not found.", 404, $e);
+            }
+            
+            // Re-throw the original exception with more context
+            throw new Exception("Error retrieving source with ID {$sourceId}: " . $e->getMessage(), $e->getCode(), $e);
+        }
     }
 
     /**
