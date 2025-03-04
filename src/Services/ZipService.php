@@ -332,6 +332,8 @@ class ZipService
      *
      * This method retrieves an existing source object from the Zip API using the source ID.
      * The response includes details about the source such as its type, status, and payment details.
+     * 
+     * Note: This method uses the public key for authentication, as required by the Zip API.
      *
      * The returned SourceResponseData object contains the following properties:
      * - object: String representing the object's type
@@ -359,7 +361,8 @@ class ZipService
                 throw new Exception('Invalid source ID format. Source ID should start with "src_" followed by alphanumeric characters.');
             }
             
-            $response = $this->makeRequest('GET', "/sources/{$sourceId}");
+            // Use public key for authentication as required by the Zip API
+            $response = $this->makePublicKeyRequest('GET', "/sources/{$sourceId}");
             
             return new \Domdanao\ZipSdkLaravel\DTOs\SourceResponseData($response);
         } catch (Exception $e) {
@@ -550,7 +553,7 @@ class ZipService
     
     /**
      * Make an HTTP request to the Zip API using the public key
-     * This is specifically used for creating sources
+     * This is used for operations that require the public key, such as creating and retrieving sources
      *
      * @param string $method
      * @param string $endpoint

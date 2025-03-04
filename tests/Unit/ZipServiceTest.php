@@ -66,6 +66,7 @@ class ZipServiceTest extends TestCase
 
     public function testGetSource()
     {
+        // Mock the HTTP request with the public key
         Http::fake([
             'https://api.zip.ph/v2/sources/src_123456' => Http::response([
                 'object' => 'source',
