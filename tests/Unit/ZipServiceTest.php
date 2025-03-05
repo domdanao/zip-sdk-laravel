@@ -240,28 +240,92 @@ class ZipServiceTest extends TestCase
         Http::fake([
             'https://api.zip.ph/v2/charges' => Http::response([
                 'id' => 'ch_123456',
+                'object' => 'charge',
                 'amount' => 10000,
                 'currency' => 'PHP',
-                'customer_id' => 'cus_123456',
-                'source_id' => 'src_123456',
+                'source' => 'src_123456',
+                'description' => 'Test charge',
+                'statement_descriptor' => 'Test Charge',
                 'status' => 'succeeded',
+                'captured' => true,
+                'customer_id' => 'cus_123456',
             ], 200),
         ]);
 
         $chargeData = [
             'amount' => 10000,
             'currency' => 'PHP',
+            'source' => 'src_123456',
+            'description' => 'Test charge',
+            'statement_descriptor' => 'Test Charge',
             'customer_id' => 'cus_123456',
-            'source_id' => 'src_123456',
         ];
 
         $response = $this->zipService->createCharge($chargeData);
 
         $this->assertEquals('ch_123456', $response['id']);
+        $this->assertEquals('charge', $response['object']);
         $this->assertEquals(10000, $response['amount']);
         $this->assertEquals('PHP', $response['currency']);
-        $this->assertEquals('cus_123456', $response['customer_id']);
-        $this->assertEquals('src_123456', $response['source_id']);
+        $this->assertEquals('src_123456', $response['source']);
+        $this->assertEquals('Test charge', $response['description']);
+        $this->assertEquals('Test Charge', $response['statement_descriptor']);
         $this->assertEquals('succeeded', $response['status']);
+        $this->assertTrue($response['captured']);
+        $this->assertEquals('cus_123456', $response['customer_id']);
+    }
+
+    public function testCreateChargeWithOptionalParameters()
+    {
+        Http::fake([
+            'https://api.zip.ph/v2/charges' => Http::response([
+                'id' => 'ch_123456',
+                'object' => 'charge',
+                'amount' => 10000,
+                'currency' => 'PHP',
+                'source' => 'src_123456',
+                'description' => 'Test charge with options',
+                'statement_descriptor' => 'Test Charge',
+                'status' => 'requires_capture',
+                'captured' => false,
+                'require_auth' => false,
+                'customer_id' => 'cus_123456',
+                'metadata' => [
+                    'order_id' => '12345',
+                    'product_name' => 'Test Product',
+                ],
+            ], 200),
+        ]);
+
+        $chargeData = [
+            'amount' => 10000,
+            'currency' => 'PHP',
+            'source' => 'src_123456',
+            'description' => 'Test charge with options',
+            'statement_descriptor' => 'Test Charge',
+            'capture' => false,
+            'require_auth' => false,
+            'customer_id' => 'cus_123456',
+            'metadata' => [
+                'order_id' => '12345',
+                'product_name' => 'Test Product',
+            ],
+        ];
+
+        $response = $this->zipService->createCharge($chargeData);
+
+        $this->assertEquals('ch_123456', $response['id']);
+        $this->assertEquals('charge', $response['object']);
+        $this->assertEquals(10000, $response['amount']);
+        $this->assertEquals('PHP', $response['currency']);
+        $this->assertEquals('src_123456', $response['source']);
+        $this->assertEquals('Test charge with options', $response['description']);
+        $this->assertEquals('Test Charge', $response['statement_descriptor']);
+        $this->assertEquals('requires_capture', $response['status']);
+        $this->assertFalse($response['captured']);
+        $this->assertFalse($response['require_auth']);
+        $this->assertEquals('cus_123456', $response['customer_id']);
+        $this->assertEquals('12345', $response['metadata']['order_id']);
+        $this->assertEquals('Test Product', $response['metadata']['product_name']);
     }
 }

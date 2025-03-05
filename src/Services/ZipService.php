@@ -430,9 +430,27 @@ class ZipService
     /**
      * Create a charge in Zip
      *
-     * @param array $data
-     * @return array
-     * @throws Exception
+     * This method creates a charge for a payment source. It can be used to charge a credit/debit card,
+     * wallet, or bank account that has been previously created as a source.
+     *
+     * Required parameters:
+     * - amount: A positive integer in the smallest currency unit (e.g., cents)
+     * - currency: 3-letter ISO code for currency (e.g., 'PHP')
+     * - source: The ID of the payment source (e.g., 'src_123456')
+     * - description: An arbitrary string to attach to the charge
+     * - statement_descriptor: Text that appears on the customer's credit card statement (max 15 chars)
+     *
+     * Optional parameters:
+     * - capture: Whether to immediately capture the charge (default: true)
+     * - cvc: The card's security code (for card sources)
+     * - require_auth: Whether to require 3D secure authentication (default: true)
+     * - customer_id: The ID of the customer if the charge is for a specific customer
+     * - redirect_url: URL to redirect after payment completion
+     * - metadata: Additional data to attach to the charge
+     *
+     * @param array $data The charge data
+     * @return array The created charge object
+     * @throws Exception If validation fails or there's an error with the API request
      */
     public function createCharge(array $data): array
     {
