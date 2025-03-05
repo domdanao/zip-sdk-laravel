@@ -54,7 +54,17 @@ class ZipServiceTest extends TestCase
         $sourceData = [
             'type' => 'card',
             'customer_id' => 'cus_123456',
-            'token' => 'tok_123456',
+            'card' => [
+                'name' => 'John Doe',
+                'number' => '4242424242424242',
+                'exp_month' => '12',
+                'exp_year' => '2025',
+                'cvc' => '123',
+            ],
+            'redirect' => [
+                'success' => 'https://example.com/success',
+                'fail' => 'https://example.com/fail',
+            ],
         ];
 
         $response = $this->zipService->createSource($sourceData);
@@ -141,14 +151,26 @@ class ZipServiceTest extends TestCase
         ]);
         
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Source with ID src_notfound not found');
+        $this->expectExceptionMessage('Error retrieving source with ID src_notfound: Zip API Error (resource_not_found): Source not found');
         
         $this->zipService->getSource('src_notfound');
     }
 
     public function testAttachSource()
     {
+        // Mock the getSource response to return a card source
         Http::fake([
+            'https://api.zip.ph/v2/sources/src_789012' => Http::response([
+                'object' => 'source',
+                'id' => 'src_789012',
+                'type' => 'card',
+                'card' => [
+                    'last4' => '4242',
+                    'brand' => 'visa',
+                ],
+                'vaulted' => true,
+                'used' => false,
+            ], 200),
             'https://api.zip.ph/v2/customers/cus_123456/sources' => Http::response([
                 'id' => 'src_789012',
                 'type' => 'card',
@@ -161,6 +183,41 @@ class ZipServiceTest extends TestCase
         $this->assertEquals('src_789012', $response['id']);
         $this->assertEquals('card', $response['type']);
         $this->assertEquals('cus_123456', $response['customer_id']);
+    }
+
+    public function testAttachNonCardSource()
+    {
+        // Mock the getSource response to return a non-card source (e.g., gcash)
+        Http::fake([
+            'https://api.zip.ph/v2/sources/src_789012' => Http::response([
+                'object' => 'source',
+                'id' => 'src_789012',
+                'type' => 'gcash',
+                'vaulted' => false,
+                'used' => false,
+            ], 200),
+        ]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Only card sources can be attached to customers');
+
+        $this->zipService->attachSource('cus_123456', 'src_789012');
+    }
+
+    public function testAttachSourceNotFound()
+    {
+        // Mock a 404 response for getSource
+        Http::fake([
+            'https://api.zip.ph/v2/sources/src_notfound' => Http::response([
+                'error' => 'Source not found',
+                'code' => 'resource_not_found',
+            ], 404),
+        ]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Source with ID src_notfound not found or is not accessible');
+
+        $this->zipService->attachSource('cus_123456', 'src_notfound');
     }
 
     public function testDetachSource()

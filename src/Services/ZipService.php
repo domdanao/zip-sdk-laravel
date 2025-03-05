@@ -378,19 +378,38 @@ class ZipService
 
     /**
      * Attach a source to a customer in Zip
+     * 
+     * Note: Only card sources can be attached to customers.
      *
-     * @param string $customerId
-     * @param string $source
-     * @return array
-     * @throws Exception
+     * @param string $customerId The ID of the customer to attach the source to
+     * @param string $sourceId The ID of the source to attach (must be a card source)
+     * @return array The attached source data
+     * @throws Exception If the source is not a card source or if there's an error with the API request
      */
-    public function attachSource(string $customerId, string $source): array
+    public function attachSource(string $customerId, string $sourceId): array
     {
-        $response = $this->makeRequest('POST', "/customers/{$customerId}/sources", [
-            'source' => $source
-        ]);
-        
-        return $response;
+        // Validate that the source is a card source
+        try {
+            $source = $this->getSource($sourceId);
+            
+            if ($source->getType() !== 'card') {
+                throw new Exception('Only card sources can be attached to customers. The provided source is of type: ' . $source->getType());
+            }
+            
+            $response = $this->makeRequest('POST', "/customers/{$customerId}/sources", [
+                'source' => $sourceId
+            ]);
+            
+            return $response;
+        } catch (Exception $e) {
+            // If the source doesn't exist, getSource will throw an exception
+            if (strpos($e->getMessage(), 'not found') !== false) {
+                throw new Exception("Source with ID {$sourceId} not found or is not accessible.", 404, $e);
+            }
+            
+            // Re-throw any other exceptions
+            throw $e;
+        }
     }
 
     /**
